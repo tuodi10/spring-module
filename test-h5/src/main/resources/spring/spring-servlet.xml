@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+
+
+	
+	
+	
+	<!--是默认实现,可以不写，Spring容器默认会默认使用该类 启动Spring MVC的注解功能，完成请求和注解POJO的映射
+	<bean id="urlMapping"
+		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+	 -->
+	
+<!--
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+ -->
+ 
+ 
+ <!--
+      spring mvc返回json格式疑问@ResponseBody
+               经过排查原来是配置文件方式不同引起的：
+               首先引入
+      jackson-core-asl-1.6.4.jar
+      jackson-mapper-asl-1.6.4.jar
+               如果是：<mvc:annotation-driven />那么则没有问题,如果把配置换成
+      <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+      <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+              则会报异常.那么需要补充配置,如果是<mvc:annotation-driven />返回类型不能是ModelAndView.如过是以下配置ModelAndView会解析成json数据
+  <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+    <property name="messageConverters">
+     <list>
+        <ref bean="jsonHttpMessageConverter"/>
+     </list>
+   </property>
+</bean>
+
+<bean id="jsonHttpMessageConverter" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+-->
+ 
+ 
+ 
+
+    <!-- 相当于注册了DefaultAnnotationHandlerMapping和AnnotationMethodHandlerAdapter两个bean，配置一些messageconverter。即解决了@Controller注解的使用前提配置 -->
+	<mvc:annotation-driven />
+
+	<!-- 将隐式地向Spring容器注册AutowiredAnnotationBeanPostProcessor、 CommonAnnotationBeanPostProcessor、
+            PersistenceAnnotationBeanPostProcessor 以及RequiredAnnotationBeanPostProcessor这4个BeanPostProcessor
+            <context:annotation-config /> -->
+	<!-- 启用了对类包进行扫描以实施注释驱动Bean定义的功能, 同时还启用了注释驱动自动注入的功能（即还隐式地在内部注册了AutowiredAnnotationBeanPostProcessor和CommonAnnotationBeanPostProcessor,
+		因此当使用<context:component-scan />后，就可以将<context:annotation-config />移除了 -->
+	<!-- <context:annotation-config /> -->
+	<context:component-scan base-package="com.test.zero.web.controller,com.test.zero.service.common,com.test.zero.dal"/>
+	<aop:aspectj-autoproxy proxy-target-class="true"/>
+
+
+
+	<!-- freemarker的配置 -->
+	<bean id="freemarkerConfig"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/templateViews" />
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="template_update_delay">5</prop>
+				<prop key="defaultEncoding">UTF-8</prop>
+				<prop key="url_escaping_charset">UTF-8</prop>
+				<prop key="locale">zh_CN</prop>
+				<prop key="boolean_format">true,false</prop>
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<prop key="time_format">HH:mm:ss</prop>
+				<prop key="number_format">0.######</prop>
+				<prop key="whitespace_stripping">true</prop>
+			</props>
+		</property>
+	</bean>
+
+
+
+
+
+	<bean id="ViewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+		<property name="order" value="1"/>
+		<property name="prefix" value="/views/"></property>
+		<property name="suffix" value=".jsp"></property>
+		<property name="contentType" value="text/html; charset=UTF-8" />
+	</bean>
+
+
+
+	<!-- 定义FreeMarker视图解析器与属性配置 -->
+	<bean id="frameworkViewResolver"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView"/>
+		<property name="order" value="0"/>
+		<property name="suffix" value=".ftl"/>
+		<property name="contentType" value="text/html;charset=UTF-8"/>
+		<property name="allowRequestOverride" value="true"/>  <!-- 在request范围内充许重复绑定 -->
+		<property name="allowSessionOverride" value="true"/>  <!-- 在session范围内充许重复绑定 -->
+		<property name="exposeRequestAttributes" value="true"/>
+		<property name="exposeSessionAttributes" value="true"/>
+		<property name="exposeSpringMacroHelpers" value="true"/>
+		<property name="requestContextAttribute" value="rc"/> <!-- 设置contextpath 在 FTL 页面中用　${rc.contextPath}得到 -->
+	</bean>
+
+
+
+	<!-- 设置 HandlerExceptionResolver -->
+	<bean id="handlerExceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="/error" />
+		<property name="defaultStatusCode" value="500" />
+	</bean>
+
+
+	<!-- 配置 文件上传的支持
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8" />
+		<property name="maxUploadSize" value="10485760" />
+		<property name="resolveLazily" value="true" />
+		<property name="maxInMemorySize" value="2097152" />
+	</bean>-->
+
+
+
+<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<mvc:exclude-mapping path="/order/pay/alinotifycallback"/>
+			<bean class="com.test.zero.web.intercepts.ControllerInterceptor" />
+
+		</mvc:interceptor>
+	</mvc:interceptors>
+     
+
+
+<!-- htmls/**映射到 ResourceHttpRequestHandler进行处理，location指定静态资源的位置.可以是web application根目录下、jar包里面，这样可以把静态资源压缩到jar包中。cache-period 可以使得静态资源进行web cache 
+ 如果出现下面的错误，可能是没有配置<mvc:annotation-driven />的原因。
+ 方案2 ，使用<mvc:default-servlet-handler/>
+ -->
+
+<mvc:resources mapping="/resources/**" location="/" />
+
+</beans>

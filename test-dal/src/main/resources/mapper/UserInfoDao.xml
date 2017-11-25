@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="com.test.zero.dal.user.UserInfoDaoIF">
+
+
+
+
+
+    <insert id="addUserInfo" parameterType="com.test.zero.model.entity.user.UserInfoEntity" useGeneratedKeys="true" keyProperty="id">
+ <![CDATA[
+        insert into userinfo(name,sex) values(#{name},#{sex})
+        ]]>
+    </insert>
+
+
+    <select id="findUserInfo"  resultType="com.test.zero.model.entity.user.UserInfoEntity">
+        SELECT
+         id,
+         name,
+         sex,
+         create_time as createTime,
+         update_time as updateTime
+        FROM userinfo
+    </select>
+
+
+    <select id="getUserInfoById" parameterType="int" resultType="com.test.zero.model.entity.user.UserInfoEntity">
+        SELECT
+         id,
+         name,
+         sex,
+         create_time as createTime,
+         update_time as updateTime
+        FROM userinfo WHERE id=#{id}
+    </select>
+    
+</mapper>
